@@ -1,9 +1,14 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+
 try:
     plt.style.use("seaborn-deep")
 except OSError:
     plt.style.use("default")  # Or any other valid style
+    
+import pypfopt.plotting as pfplot
+pfplot.plt = plt  # Override pypfopt's plt usage with your configured one
+
 from pypfopt.efficient_frontier import EfficientFrontier
 from pypfopt import plotting
 import numpy as np
