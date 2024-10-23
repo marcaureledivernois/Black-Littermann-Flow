@@ -1,7 +1,10 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+try:
+    plt.style.use("seaborn-deep")
+except OSError:
+    plt.style.use("default")  # Or any other valid style
 from pypfopt.efficient_frontier import EfficientFrontier
-plt.style.use("classic") 
 from pypfopt import plotting
 import numpy as np
 import pandas as pd
