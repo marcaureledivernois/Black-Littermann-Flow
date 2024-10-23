@@ -1,7 +1,8 @@
 import streamlit as st
-from pypfopt.efficient_frontier import EfficientFrontier
-from pypfopt import plotting
 import matplotlib.pyplot as plt
+from pypfopt.efficient_frontier import EfficientFrontier
+plt.style.use("classic") 
+from pypfopt import plotting
 import numpy as np
 import pandas as pd
 from copy import deepcopy
