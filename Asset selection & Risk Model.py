@@ -15,9 +15,9 @@ import streamlit as st
 ##Asset Selection###############################################################################################
 
 # Databases Initialization
-Constituents = pd.read_csv(r"constituents.csv")
-SP500_Asset_df = pd.read_csv(r"sp500_Companies_AdjClose.csv", index_col=0, parse_dates=True)
-BenchMark_df = pd.read_csv(r"Benchmarks_Adj_Close.csv", index_col=0, parse_dates=True)
+Constituents = pd.read_csv(r"Resources/constituents.csv")
+SP500_Asset_df = pd.read_csv(r"Resources/sp500_Companies_AdjClose.csv", index_col=0, parse_dates=True)
+BenchMark_df = pd.read_csv(r"Resources/Benchmarks_Adj_Close.csv", index_col=0, parse_dates=True)
 
 # Initialize session state
 if 'Asset_List' not in st.session_state:
@@ -169,7 +169,7 @@ elif data_frequency == "Annual":
 Analysis_df.index = Analysis_df.index.strftime('%Y-%m-%d').dropna()
 
 # Save the Analysis dataframe to a CSV file
-Analysis_df.to_csv("Analysis_df.csv")
+Analysis_df.to_csv("Resources/Analysis_df.csv")
 # Display the Analysis dataframe
 
 # Collapse the dataframe to show only the first few rows
