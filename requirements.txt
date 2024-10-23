@@ -2,6 +2,5 @@ streamlit
 pandas
 numpy
 matplotlib
-matplotlib.pyplot
 seaborn
 pypfopt
