@@ -1,16 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-
-try:
-    plt.style.use("seaborn-deep")
-except OSError:
-    plt.style.use("default")  # Or any other valid style
-    
-import pypfopt.plotting as pfplot
-pfplot.plt = plt  # Override pypfopt's plt usage with your configured one
-
 from pypfopt.efficient_frontier import EfficientFrontier
-from pypfopt import plotting
 import numpy as np
 import pandas as pd
 from copy import deepcopy
@@ -127,8 +117,15 @@ with st.expander("Show Efficient Frontier"):
     with plt.style.context('dark_background'):
         fig, ax = plt.subplots(figsize=(10, 6))
         
-        # Plot efficient frontier
-        plotting.plot_efficient_frontier(ef, ax=ax, show_assets=False)
+        # Manually plot the efficient frontier
+        mus = np.linspace(-0.01, 0.35, 100)
+        frontier = []
+        for mu in mus:
+            ef.efficient_return(mu)
+            ret, std, _ = ef.portfolio_performance()
+            frontier.append((std, ret))
+        frontier = np.array(frontier)
+        ax.plot(frontier[:, 0], frontier[:, 1], linestyle='--', color='cyan', label='Efficient Frontier')
         
         # Calculate and plot tangency, min vol, max ret and max quadratic utility portfolios
         if allow_sector_constraints:
