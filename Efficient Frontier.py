@@ -52,7 +52,7 @@ custom_constraints = st.sidebar.checkbox(
 if allow_sector_constraints:
     st.title("Sector constraints")
 
-    constituents = pd.read_csv('Resources/constituents.csv')
+    constituents = pd.read_csv('constituents.csv')
     sector_mapper = dict(zip(constituents['Symbol'], constituents['GICS Sector']))
 
     # Filter the sector mapper with the asset list

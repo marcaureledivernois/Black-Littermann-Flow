@@ -11,8 +11,8 @@ Risk_Matrix = st.session_state['risk_model_matrix']
 Asset_List = st.session_state['Asset_List']
 
 # Load Data
-Constituents = pd.read_csv('Resources/constituents.csv')
-Analysis_df = pd.read_csv('Resources/Analysis_df.csv')
+Constituents = pd.read_csv('constituents.csv')
+Analysis_df = pd.read_csv('Analysis_df.csv')
 
 # Filter Constituents based on Asset_List
 filtered_constituents = Constituents[Constituents['Symbol'].isin(Asset_List)]
