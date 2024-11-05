@@ -244,7 +244,7 @@ if not Analysis_df_no_benchmark.empty and len(Analysis_df_no_benchmark.columns) 
     with plt.style.context('dark_background'):
         fig, ax = plt.subplots()
         
-        sns.heatmap(risk_model_matrix, annot=True, fmt=".2f", cmap="magma", ax=ax)
+        sns.heatmap(risk_model_matrix, annot=True, fmt=".2f", cmap="Reds", ax=ax)
         
         # Set labels and title with white color
         ax.set_xlabel('Assets', color='white')
