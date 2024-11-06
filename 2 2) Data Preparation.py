@@ -1,8 +1,6 @@
 ##Libraries###############################################################################################
 # Data handling libraries
 import pandas as pd
-import numpy as np
-from datetime import datetime
 
 # Graphics libraries
 import matplotlib.pyplot as plt
@@ -14,41 +12,19 @@ import streamlit as st
 
 ##Asset Selection###############################################################################################
 
+Asset_List = st.session_state.get('Asset_List')
+BenchMark = st.session_state.get('BenchMark')
+
+BenchMark = st.session_state.get('BenchMarkTicker')
 # Databases Initialization
-Constituents = pd.read_csv(r"Resources/constituents.csv")
 SP500_Asset_df = pd.read_csv(r"Resources/sp500_Companies_AdjClose.csv", index_col=0, parse_dates=True)
 BenchMark_df = pd.read_csv(r"Resources/Benchmarks_Adj_Close.csv", index_col=0, parse_dates=True)
 
-# Initialize session state
-if 'Asset_List' not in st.session_state:
-    st.session_state['Asset_List'] = []
 if 'Start_Date' not in st.session_state:
     st.session_state['Start_Date'] = SP500_Asset_df.index[-1] - pd.DateOffset(years=5)
 if 'End_Date' not in st.session_state:
     st.session_state['End_Date'] = SP500_Asset_df.index[-1]
-if 'BenchMark' not in st.session_state:
-    st.session_state['BenchMark'] = 'S&P 500'
 
-st.title("Asset Selection")
-
-# Create a dictionary from Constituents with ticker as key and company name as value
-constituents_dict = pd.Series(Constituents['Security'].values, index=Constituents['Symbol']).to_dict()
-
-# User input for Asset List with search by company name
-def update_asset_list():
-    st.session_state['Asset_List'] = st.session_state['temp_Asset_List']
-
-if 'temp_Asset_List' not in st.session_state:
-    st.session_state['temp_Asset_List'] = st.session_state['Asset_List']
-
-Asset_List = st.multiselect(
-    "Select Assets",
-    options=list(constituents_dict.keys()),
-    format_func=lambda x: f"{x} - {constituents_dict[x]}",
-    on_change=update_asset_list,
-    key='temp_Asset_List',
-    label_visibility='collapsed'
-)
 
 ##Sidebar###############################################################################################
 
@@ -57,26 +33,6 @@ st.sidebar.markdown("<h2 style='text-align: center;'>Advanced Settings</h2>", un
 st.sidebar.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
 # Section title for Data Selection options
 st.sidebar.markdown("<h4 style='text-align: left;'>Data Selection Options</h4>", unsafe_allow_html=True)
-
-# Dictionary with names of benchmarks
-benchmark_names = {
-    '^FTSE': 'FTSE 100',
-    '^NDX': 'NASDAQ 100',
-    '^RUT': 'Russell 2000',
-    '^NYA': 'NYSE Composite',
-    '^GSPC': 'S&P 500'
-}
-
-# User input for Benchmark
-BenchMark = st.sidebar.selectbox(
-    "Benchmark",
-    [benchmark_names.get(b, b) for b in BenchMark_df.columns.tolist()],
-    index=[benchmark_names.get(b, b) for b in BenchMark_df.columns.tolist()].index(st.session_state['BenchMark'])
-)
-st.session_state['BenchMark'] = BenchMark
-
-# Reverse lookup to get the ticker symbol from the selected benchmark name
-BenchMark = {v: k for k, v in benchmark_names.items()}.get(BenchMark, BenchMark)
 
 # User input for Start Date and End Date
 col1, col2 = st.sidebar.columns(2)
