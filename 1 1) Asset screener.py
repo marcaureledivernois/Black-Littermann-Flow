@@ -107,7 +107,7 @@ ranges_C = {
     'Poor': (0, 30),
     'Moderate': (30, 60),
     'Good': (60, 80),
-    'Excellent': (80, 100
+    'Excellent': (80, 100)
 }
 colors_C = {
     'Poor': '#ffb8b8',
