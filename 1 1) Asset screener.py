@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from numpy import pi, cos
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 from pypfopt import risk_models
 
 from Usefull_Functions import plot_bar
