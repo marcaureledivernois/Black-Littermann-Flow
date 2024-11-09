@@ -223,8 +223,11 @@ Analysis_df.index = Analysis_df.index.strftime('%Y-%m-%d').dropna()
 Analysis_df.to_csv("Resources/Analysis_df.csv")
 
 # Screening Tool##################################################################################################
-earliest_dates = [SP500_Asset_df[asset].dropna().index[0] for asset in Asset_List]
-earliest_date = max(earliest_dates).strftime('%Y-%m-%d')
+try:
+    earliest_dates = [SP500_Asset_df[asset].dropna().index[0] for asset in Asset_List]
+    earliest_date = max(earliest_dates).strftime('%Y-%m-%d')
+except Exception as e:
+    earliest_date = Start_Date.strftime('%Y-%m-%d')
 
 if len(Asset_List) >= 2 and Start_Date.strftime('%Y-%m-%d') > earliest_date:
     
