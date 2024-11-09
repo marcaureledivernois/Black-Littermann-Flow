@@ -6,7 +6,7 @@ from numpy import pi, cos
 import matplotlib.pyplot as plt
 from pypfopt import risk_models
 
-from Usefull_Functions import plot_bar
+from Usefull_Functions import plot_bar, calculate_redundancy_score
 
 # Page Inizialization####################################################################
 Constituents = pd.read_csv(r"Resources/constituents.csv")
@@ -103,10 +103,10 @@ correlation_level = (
     'Poor'
 )
 ranges_C = {
-    'Poor': (0, 30),
-    'Moderate': (30, 60),
-    'Good': (60, 80),
-    'Excellent': (80, 100)
+    'Excellent': (0, 30),
+    'Good': (30, 60),
+    'Modeate': (60, 80),
+    'Poor': (80, 100)
 }
 colors_C = {
     'Poor': '#ffb8b8',
@@ -233,19 +233,20 @@ if len(Asset_List) >= 2:
     col4.markdown("**Beta**", unsafe_allow_html=True)
     col3.markdown("**Mk Cap**", unsafe_allow_html=True)
     col6.markdown("**Monthly price chart**", unsafe_allow_html=True)
-
+    
     # Display data for selected assets
     for asset in Asset_List:
-        current_price = Analysis_df[asset].iloc[-1]
+        current_price = SP500_Asset_df[asset].iloc[-1]
         sector_abbr = Constituents.loc[Constituents['Symbol'] == asset, 'GICS Sector'].values[0][:3].upper()
         company_name = f"{constituents_dict[asset].split()[0]} - {sector_abbr}"
         if len(SP500_Asset_df[asset]) >= 252:
             week_52_range = f"{SP500_Asset_df[asset].rolling(window=252).min().iloc[-1]:.2f} - {SP500_Asset_df[asset].rolling(window=252).max().iloc[-1]:.2f}"
         else:
             week_52_range = f"{SP500_Asset_df[asset].min():.2f} - {SP500_Asset_df[asset].max():.2f}"
+        
         # Calculate the beta of the asset
-        asset_returns = SP500_Asset_df[asset].pct_change(fill_method=None).dropna()
-        benchmark_returns = BenchMark_df[BenchMark].pct_change(fill_method=None).dropna()
+        asset_returns = Analysis_df[asset].pct_change(fill_method=None).dropna()
+        benchmark_returns = Analysis_df['Benchmark'].pct_change(fill_method=None).dropna()
         covariance = asset_returns.cov(benchmark_returns)
         variance = benchmark_returns.var()
         beta = covariance / variance
@@ -311,7 +312,7 @@ else:
 ########################################################################################################################################
 # Compute the beta of the market portfolio resulted from the selected assets
 if len(Asset_List) >= 2:
-    st.header("Summary")
+    st.header("Summary - The market portfolio")
 
     # Calculate the Beta Score
     asset_returns = SP500_Asset_df[Asset_List].pct_change(fill_method=None).dropna()
@@ -355,12 +356,8 @@ if len(Asset_List) >= 2:
 
     # Calculate the correlation Score
     correlation_matrix = risk_model_matrix.corr()
+    correlation_score, Pairs = calculate_redundancy_score(correlation_matrix)
 
-    # Calculate the average correlation
-    avg_correlation = correlation_matrix.where(np.triu(np.ones(correlation_matrix.shape), k=1).astype(bool)).mean().mean()
-    correlation_score = 100 - (avg_correlation * 100)
-
-    st.write(correlation_score)
     # Start of the formatting 
     col1, col2, col3 = st.columns(3)
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -375,7 +372,7 @@ if len(Asset_List) >= 2:
         plot_bar(diversification_score, ranges_Div, colors_Div)
 
     with col3:
-        st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Portfolio correlation</strong></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Portfolio redundancy</strong></div>", unsafe_allow_html=True)
         st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
         plot_bar(correlation_score, ranges_C, colors_C)
 
@@ -385,6 +382,7 @@ if len(Asset_List) >= 2:
     col1, col2, col3 = st.columns(3)
     col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
+        st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Portfolio type</strong></div>", unsafe_allow_html=True)
         st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
         if portfolio_beta < -0.25:
             st.markdown("<div style='text-align: center;'>This portfolio is classified as <strong>Anti-cyclical</strong>. It tends to perform well during economic downturns and may underperform during economic expansions.</div>", unsafe_allow_html=True)
@@ -395,26 +393,53 @@ if len(Asset_List) >= 2:
         else:
             st.markdown("<div style='text-align: center;'>This portfolio is classified as <strong>Aggressive</strong>. It tends to outperform during market upswings but may underperform during downturns.</div>", unsafe_allow_html=True)
     with col2:
-        st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
         if diversification_score < 30:
+            st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Diversify more</strong></div>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
             st.markdown("<div style='text-align: center;'>This portfolio has <strong>Poor</strong> diversification. Consider adding more stocks and diversifying across different sectors to improve the score.</div>", unsafe_allow_html=True)
         elif 30 <= diversification_score < 60:
+            st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Diversify more</strong></div>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
             st.markdown("<div style='text-align: center;'>This portfolio has <strong>Moderate</strong> diversification. Adding more stocks and ensuring they are from different sectors can help improve diversification.</div>", unsafe_allow_html=True)
         elif 60 <= diversification_score < 80:
+            st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Diversify more</strong></div>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
             st.markdown("<div style='text-align: center;'>This portfolio has <strong>Good</strong> diversification. To achieve an excellent score, consider adding a few more stocks from different sectors.</div>", unsafe_allow_html=True)
         else:
+            st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Good Diversification</strong></div>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
             st.markdown("<div style='text-align: center;'>This portfolio has <strong>Excellent</strong> diversification. Keep monitoring and maintaining the balance across different sectors.</div>", unsafe_allow_html=True)
 
     with col3:
-        st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
-        if correlation_score < 30:
-            st.markdown("<div style='text-align: center;'>This portfolio has a <strong>Poor</strong> correlation score. Many stocks in the portfolio are highly correlated.</div>", unsafe_allow_html=True)
-        elif 30 <= correlation_score < 60:
-            st.markdown("<div style='text-align: center;'>This portfolio has a <strong>Moderate</strong> correlation score. There is some correlation among the stocks.</div>", unsafe_allow_html=True)
-        elif 60 <= correlation_score < 80:
-            st.markdown("<div style='text-align: center;'>This portfolio has a <strong>Good</strong> correlation score. The stocks are reasonably diversified in terms of correlation. </div>", unsafe_allow_html=True)
+        if Pairs:
+            st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Remove high corr. pairs</strong></div>", unsafe_allow_html=True)
+
         else:
-            st.markdown("<div style='text-align: center;'>This portfolio has an <strong>Excellent</strong> correlation score. The stocks are well diversified in terms of correlation. </div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align: center; font-size: 20px; font-weight: bold;'><strong>Low redundancy</strong></div>", unsafe_allow_html=True)
+
+        st.markdown("<hr style='margin: 0; padding: 0;'>", unsafe_allow_html=True)
+
+        if Pairs:
+            # Create a single line string with bullet-separated pairs
+            pairs_string = "Pairs: " + ", ".join([f"<span style='color: #ff4b4b; font-size: 17px;'>{pair}</span>" for pair in Pairs])
+            # Display the pairs on a single line
+            st.markdown(
+            f"<h3 style='text-align: left; font-size: 16px;'>"
+            f"{pairs_string}"
+            f"</h3>", 
+            unsafe_allow_html=True
+            )
+
+        # Displaying correlation score analysis with a single color
+        if correlation_score < 30:
+            st.markdown("<div style='text-align: center;'>The portfolio is well-diversified with minimal redundancy.</div>", unsafe_allow_html=True)
+        elif 30 <= correlation_score < 60:
+            st.markdown("<div style='text-align: center;'>Some redundancy, but decent diversification.</div>", unsafe_allow_html=True)
+        elif 60 <= correlation_score < 80:
+            st.markdown("<div style='text-align: center;'>Noticeable redundancy, room for improvement.</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='text-align: center;'>High redundancy, poor diversification.</div>", unsafe_allow_html=True)
+
 
 # Debug Mode#######################################################################################################################################
 if debug_mode:

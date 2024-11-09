@@ -20,7 +20,7 @@ def plot_bar(value, ranges, colors):
 
     # Plot each range as a separate bar
     for level, (start, end) in ranges.items():
-        ax.barh(0, end - start, left=start, color=colors.get(level, '#000000'), edgecolor='none')
+        ax.barh(0, end - start, left=start, color=colors.get(level, '#ff9999'), edgecolor='none')
 
     # Add the value indicator (a vertical line at the specified value)
     ax.axvline(value, color='white', linestyle='-', linewidth=6)  # Thicker line
@@ -57,7 +57,7 @@ def plot_bar(value, ranges, colors):
 
     # Display the correlation level as a centered, styled label
     st.markdown(
-        f"<div style='text-align: center; color: white; font-size: 20px; background-color: {colors.get(correlation_level, '#ff4b4b')}; "
+        f"<div style='text-align: center; color: white; font-size: 20px; background-color: #ff4b4b; " 
         f"padding: 10px; border-radius: 5px; font-weight: bold; margin-top: 0px;'>{correlation_level}</div>",
         unsafe_allow_html=True
     )
@@ -97,3 +97,36 @@ def plot_cumulative_returns(Analysis_df):
         # Collapse the graph to show only when expanded
         with st.expander("Cumulative Returns Graph"):
             st.pyplot(fig)
+
+def calculate_redundancy_score(corr_matrix):
+    n = corr_matrix.shape[0]  # Number of assets
+    redundancy_scores = []
+    high_corr_pairs = []  # To store high correlation pairs in the required format
+
+    # Iterate over each asset
+    for i in range(n):
+        # Get the correlations of the asset without its self-correlation
+        correlations = corr_matrix.iloc[i].drop(index=corr_matrix.columns[i])
+        
+        # Filter high correlations (> 0.7)
+        high_corr = correlations[np.abs(correlations) > 0.7]
+        
+        # Collect the high correlation pairs in the required format
+        for col, value in high_corr.items():
+            if col > corr_matrix.columns[i]:  # To avoid duplication (only store pairs once)
+                high_corr_pairs.append(f"{corr_matrix.columns[i]} & {col}")
+        
+        # Calculate the redundancy for asset i
+        redundancy_i = high_corr.abs().mean() if not high_corr.empty else 0
+        redundancy_scores.append(redundancy_i)
+
+    # Average redundancy score
+    avg_redundancy_score = np.mean(redundancy_scores)
+    
+    # Normalize the score to a scale of 0 to 100
+    normalized_redundancy_score = min(100, (avg_redundancy_score / 1.0) * 100)
+    
+    return normalized_redundancy_score, high_corr_pairs
+
+
+
