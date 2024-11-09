@@ -223,7 +223,12 @@ Analysis_df.index = Analysis_df.index.strftime('%Y-%m-%d').dropna()
 Analysis_df.to_csv("Resources/Analysis_df.csv")
 
 # Screening Tool##################################################################################################
-if len(Asset_List) >= 2:
+earliest_dates = [SP500_Asset_df[asset].dropna().index[0] for asset in Asset_List]
+earliest_date = max(earliest_dates).strftime('%Y-%m-%d')
+
+if len(Asset_List) >= 2 and Start_Date.strftime('%Y-%m-%d') > earliest_date:
+    
+
     st.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
     # Create columns & Headers
     col1, col2, col5 ,col4, col3,col6 = st.columns([0.9, 0.5, 0.8 ,0.27, 0.4, 1])
@@ -303,15 +308,23 @@ if len(Asset_List) >= 2:
         ax.set_yticklabels([f"${y_min:.1f}", f"${y_max:.1f}"], color='white')
 
         col6.pyplot(fig)
-else:
+elif len(Asset_List) < 2:
     st.markdown(
         "<div style='text-align: center; color: white; font-size: 20px; background-color: #ff4b4b; padding: 10px; border-radius: 5px; font-weight: bold;'>Select at least 2 assets</div>",
         unsafe_allow_html=True
     )
+else:
+    problematic_stocks = [asset for asset in Asset_List if SP500_Asset_df[asset].dropna().index[0].strftime('%Y-%m-%d') >= Start_Date.strftime('%Y-%m-%d')]
+    if problematic_stocks:
+        earliest_problematic_date = (max(SP500_Asset_df[asset].dropna().index[0] for asset in problematic_stocks) + pd.DateOffset(days=1)).strftime('%Y-%m-%d')
+        st.markdown(
+            f"<div style='text-align: center; color: white; font-size: 20px; background-color: #ff4b4b; padding: 10px; border-radius: 5px; font-weight: bold;'>No data available for the selected date range.<br> Problematic stock(s): {', '.join(problematic_stocks)}.<br> Either remove the problematic stocks or <br> reduce the start date to {earliest_problematic_date} to include all stocks.</div>",
+            unsafe_allow_html=True
+        )
 
 ########################################################################################################################################
 # Compute the beta of the market portfolio resulted from the selected assets
-if len(Asset_List) >= 2:
+if len(Asset_List) >= 2 and Start_Date.strftime('%Y-%m-%d') > earliest_date:
     st.header("Summary - The market portfolio")
 
     # Calculate the Beta Score
