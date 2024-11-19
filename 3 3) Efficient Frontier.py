@@ -4,6 +4,7 @@ from pypfopt.efficient_frontier import EfficientFrontier
 import numpy as np
 import pandas as pd
 from copy import deepcopy
+from matplotlib.colors import LinearSegmentedColormap
 
 returns = st.session_state['returns'] 
 risk_model_matrix = st.session_state['risk_model_matrix']
@@ -105,6 +106,9 @@ else:
 
 #############################################################################################################
 st.title("Efficient Frontier")
+colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
+custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
+
 
 if allow_sector_constraints:
     ef = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
@@ -118,7 +122,7 @@ with st.expander("Show Efficient Frontier"):
         fig, ax = plt.subplots(figsize=(10, 6))
         
         # Manually plot the efficient frontier
-        mus = np.linspace(-0.01, 0.35, 100)
+        mus = np.linspace(-0.01, 0.35, 1000)
         frontier = []
         for mu in mus:
             ef.efficient_return(mu)
@@ -167,7 +171,7 @@ with st.expander("Show Efficient Frontier"):
         rets = w.dot(ef.expected_returns)
         stds = np.sqrt(np.diag(w @ ef.cov_matrix @ w.T))
         sharpes = rets / stds
-        scatter = ax.scatter(stds, rets, marker=".", c=sharpes, cmap="magma", alpha=0.6)
+        scatter = ax.scatter(stds, rets, marker=".", c=sharpes, cmap=custom_cmap, alpha=0.6)
         
         # Add color bar for Sharpe ratios
         cbar = fig.colorbar(scatter, ax=ax, label="Sharpe Ratio", pad=0.01)

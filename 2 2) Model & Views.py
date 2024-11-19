@@ -5,6 +5,7 @@ from pypfopt.black_litterman import BlackLittermanModel
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 # Callback from another page
 Risk_Matrix = st.session_state['risk_model_matrix']
@@ -96,6 +97,11 @@ else:
     st.session_state['tau'] = tau
 
 # Main page#############################################################################################################
+# Define the custom color palette
+colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
+colors2 = ['#f2e6d9','#ff4b4b', '#ff7a7a']
+custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
+custom_cmap2 = LinearSegmentedColormap.from_list("custom_red", colors2)
 
 st.title("Black Littermann")
 
@@ -159,13 +165,13 @@ if st.session_state.get('insert_analyst_views', False):
             Blposterior = bl.bl_returns()
             
         # Plot the implied prior returns as percentages within an expandable box
-        with st.expander("Show Expected Posterior Returns"):
+        # with st.expander("Show Expected Posterior Returns"):
             with plt.style.context('dark_background'):
                 fig, ax = plt.subplots()
                 
                 # Increase the saturation of the colors
-                colors = plt.cm.magma(range(len(BlPrior)))
-                saturated_colors = [plt.cm.magma(i / len(colors) * 0.8 + 0.2) for i in range(len(colors))]
+                # colors = plt.cm.magma(range(len(BlPrior)))
+                # saturated_colors = [plt.cm.magma(i / len(colors) * 0.8 + 0.2) for i in range(len(colors))]
                 
                 # Create a DataFrame to hold the data for plotting
                 plot_data = pd.DataFrame({
@@ -175,7 +181,7 @@ if st.session_state.get('insert_analyst_views', False):
                 }, index=Asset_List)
                 
                 # Plot the data
-                plot_data.plot(kind='bar', ax=ax, color=['magenta', 'cyan', 'red'], edgecolor='none', alpha=0.7)
+                plot_data.plot(kind='bar', ax=ax, color=colors2, edgecolor='none', alpha=0.7)
                 
                 # Customize the plot
                 ax.set_xlabel('Tickers', color='white')
@@ -202,13 +208,13 @@ if st.session_state.get('insert_analyst_views', False):
 
 # Plot the implied prior returns as percentages within an expandable box if analyst views are not inserted
 if not st.session_state.get('insert_analyst_views', False):
-    with st.expander("Show Expected Implied Returns Plot"):
+    # with st.expander("Show Expected Implied Returns Plot"):
         with plt.style.context('dark_background'):
             fig, ax = plt.subplots()
             
             # Increase the saturation of the colors
-            colors = plt.cm.magma(np.linspace(0, 1, len(BlPrior)))
-            saturated_colors = [plt.cm.magma(i / len(colors) * 0.8 + 0.2) for i in range(len(colors))]
+            colors = custom_cmap2(np.linspace(0, 1, len(BlPrior)))
+
             
             # Create a DataFrame to hold the data for plotting
             plot_data = pd.DataFrame({
@@ -216,7 +222,7 @@ if not st.session_state.get('insert_analyst_views', False):
             }, index=Asset_List)
             
             # Plot the data
-            plot_data.plot(kind='bar', ax=ax, color=saturated_colors, edgecolor='none', alpha=0.7)
+            plot_data.plot(kind='bar', ax=ax, color=colors[3], edgecolor='none', alpha=0.9)
             
             # Customize the plot
             ax.set_xlabel('Tickers', color='white')
@@ -253,12 +259,11 @@ st.session_state['returns'] = returns
 st.session_state['risk_model_matrix'] = risk_model_matrix
 
 # Display the returns and risk model matrix
-
 # Plot the risk model matrix
 with plt.style.context('dark_background'):
     fig, ax = plt.subplots()
     
-    sns.heatmap(risk_model_matrix, annot=True, fmt=".2f", cmap="magma", ax=ax)
+    sns.heatmap(risk_model_matrix, annot=True, fmt=".2f", cmap=custom_cmap, ax=ax)
     
     # Set labels and title with white color
     ax.set_xlabel('Assets', color='white')

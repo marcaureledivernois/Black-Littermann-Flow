@@ -2,32 +2,39 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 
 weights = st.session_state['portfolio_weights']
+weights = dict(sorted(weights.items(), key=lambda item: item[1], reverse=True))
 
 #####################################################################################à
 # Set Streamlit page title
 st.title("Optimized Portfolio")
+colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
+colors = colors[::-1]
+custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
+
 with st.expander("View Portfolio Allocation"):
     fig, ax = plt.subplots(figsize=(6, 4))  # Smaller figure size
 
     labels = list(weights.keys())
     sizes = list(weights.values())
-    cmap = plt.get_cmap('magma')
+    cmap = plt.get_cmap(custom_cmap)
     norm = plt.Normalize(vmin=0, vmax=len(sizes))
 
     labels_with_pct = [f'{label}: {size*100:.1f}%' for label, size in zip(labels, sizes)]
 
     wedges, texts = ax.pie(
-        sizes, 
+        sizes,
         startangle=140,
-        colors=cmap(norm(np.arange(len(sizes)))),  
+        colors=cmap(norm(np.arange(len(sizes)))),
         wedgeprops=dict(width=0.3),  # Smaller wedge width
         textprops={'fontsize': 8}  # Smaller font size
     )
 
     legend = ax.legend(wedges, labels_with_pct, title="Assets:", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
-    plt.setp(legend.get_title(), fontsize=18)  # Increase the font size of the title
+    plt.setp(legend.get_title(), fontsize=18, color="#f2e6d9")  # Increase the font size of the title
+    plt.setp(legend.get_texts(), color="#f2e6d9")
 
     plt.tight_layout()
 
@@ -38,6 +45,7 @@ with st.expander("View Portfolio Allocation"):
     st.pyplot(fig)
 
 #####################################################################################
+
 st.title("Performance Metrics")
 
 Analysis_df = pd.read_csv('Resources/Analysis_df.csv')
@@ -52,6 +60,8 @@ Benchmark_Prices.set_index('Date', inplace=True)
 
 with st.expander("View Portfolio Equity curve"):
     fig1, ax1 = plt.subplots(figsize=(6, 4))  # Define ax1
+    # Format y-axis ticks to add "x" at the end of each label
+    ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.2f}x'))
 
     # Calculate the portfolio returns using Asset_Prices
     returns = Asset_Prices.pct_change().dropna()
@@ -68,7 +78,7 @@ with st.expander("View Portfolio Equity curve"):
     max_equity_date = equity_curve.idxmax()  # This returns a timestamp (date)
 
     # Plot the equity curve
-    equity_curve.plot(ax=ax1, label="Portfolio Equity Curve")
+    equity_curve.plot(ax=ax1, label="Portfolio Equity Curve", color='#FF6666')
     
     # Plot max equity point (ensure date format is correctly interpreted on x-axis)
     ax1.scatter(equity_curve.index.get_loc(max_equity_date), max_equity, color='red', marker='o', label="Max Equity")
@@ -76,7 +86,7 @@ with st.expander("View Portfolio Equity curve"):
     # Calculate and plot the benchmark equity curve
     benchmark_returns = Benchmark_Prices['Benchmark'].pct_change().dropna()
     benchmark_equity_curve = (1 + benchmark_returns).cumprod()
-    benchmark_equity_curve.plot(ax=ax1, label="Benchmark Equity Curve", linestyle='--')
+    benchmark_equity_curve.plot(ax=ax1, label="Benchmark Equity Curve", linestyle='--', color='#4682B4')
 
     # Calculate max equity point for the benchmark
     benchmark_max_equity = benchmark_equity_curve.max()
@@ -87,6 +97,16 @@ with st.expander("View Portfolio Equity curve"):
 
     # Rotate x-axis labels for better readability
     ax1.tick_params(axis='x', rotation=15)
+    ax1.xaxis.label.set_color("white")
+    ax1.yaxis.label.set_color("white")
+
+    ax1.tick_params(axis='x', colors="white")
+    ax1.tick_params(axis='y', colors="white")
+
+    ax1.spines['bottom'].set_color('white')
+    ax1.spines['left'].set_color('white')
+    ax1.spines['top'].set_color('white')
+    ax1.spines['right'].set_color('white')
 
     # Remove the "Date" label from the x-axis
     ax1.set_xlabel("")
@@ -96,7 +116,8 @@ with st.expander("View Portfolio Equity curve"):
     ax1.patch.set_alpha(0.0)
 
     # Set legend background transparency and move it to the top left
-    legend = ax1.legend(loc='upper left', fontsize=12)
+    legend = ax1.legend(loc='upper left', fontsize=7)
+    plt.setp(legend.get_texts(), color="#f2e6d9")
     legend.get_frame().set_alpha(0.0)
 
     st.pyplot(fig1)
@@ -109,22 +130,22 @@ with st.expander("View Portfolio Drawdown"):
     drawdown = (equity_curve - rolling_max) / rolling_max
 
     # Plot the drawdown
-    drawdown.plot(ax=ax2, label="Portfolio Drawdown", color='red')
+    drawdown.plot(ax=ax2, label="Portfolio Drawdown", color='#FF6666')
 
     # Calculate and plot the benchmark drawdown
     benchmark_rolling_max = benchmark_equity_curve.cummax()
     benchmark_drawdown = (benchmark_equity_curve - benchmark_rolling_max) / benchmark_rolling_max
-    benchmark_drawdown.plot(ax=ax2, label="Benchmark Drawdown", linestyle='--', color='blue')
+    benchmark_drawdown.plot(ax=ax2, label="Benchmark Drawdown", linestyle='--', color='#4682B4')
 
     # Find and plot the max drawdown point
     max_drawdown = drawdown.min()
     max_drawdown_date = drawdown.idxmin()
-    ax2.scatter(drawdown.index.get_loc(max_drawdown_date), max_drawdown, color='black', marker='o', label="Max Drawdown")
+    ax2.scatter(drawdown.index.get_loc(max_drawdown_date), max_drawdown, color='red', marker='o', label="Max Drawdown")
 
     # Find and plot the max drawdown point for the benchmark
     benchmark_max_drawdown = benchmark_drawdown.min()
     benchmark_max_drawdown_date = benchmark_drawdown.idxmin()
-    ax2.scatter(benchmark_drawdown.index.get_loc(benchmark_max_drawdown_date), benchmark_max_drawdown, color='green', marker='o', label="Benchmark Max Drawdown")
+    ax2.scatter(benchmark_drawdown.index.get_loc(benchmark_max_drawdown_date), benchmark_max_drawdown, color='blue', marker='o', label="Benchmark Max Drawdown")
 
     # Rotate x-axis labels for better readability
     ax2.tick_params(axis='x', rotation=15)
@@ -134,6 +155,12 @@ with st.expander("View Portfolio Drawdown"):
 
     # Format y-axis as percentages
     ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0%}'))
+    ax2.tick_params(axis='y', colors='white')
+    ax2.tick_params(axis='x', colors='white')
+    ax2.spines['bottom'].set_color('white')
+    ax2.spines['left'].set_color('white')
+    ax2.spines['top'].set_color('white')
+    ax2.spines['right'].set_color('white')
 
     # Set y-axis max to 0
     ax2.set_ylim(top=0)
@@ -143,11 +170,14 @@ with st.expander("View Portfolio Drawdown"):
     ax2.patch.set_alpha(0.0)
 
     # Set legend background transparency and move it to the bottom left
-    legend = ax2.legend(loc='lower left', fontsize=12)
+    legend = ax2.legend(loc='best', fontsize=7)
+    plt.setp(legend.get_texts(), color='white')
     legend.get_frame().set_alpha(0.0)
 
     st.pyplot(fig2)
 
+
+#####################################################################################
 
 # Calculate performance metrics for the benchmark
 returns_BNK = Benchmark_Prices.pct_change().dropna()
@@ -188,14 +218,14 @@ with st.expander("View Performance Metrics"):
     fig3, ax3 = plt.subplots(figsize=(8, 6))  # Define ax3
 
     # Define the bar width
-    bar_width = 0.35
+    bar_width = 0.25
 
     # Define the positions of the bars
     index = np.arange(len(metrics))
 
     # Plot the bars for the portfolio and benchmark without colormap
-    bars1 = ax3.bar(index, portfolio_values, bar_width, label='Portfolio', color='orange')
-    bars2 = ax3.bar(index + bar_width, benchmark_values, bar_width, label='Benchmark', color='blue')
+    bars1 = ax3.bar(index, portfolio_values, bar_width, label='Portfolio', color='#FF6666')
+    bars2 = ax3.bar(index + bar_width, benchmark_values, bar_width, label='Benchmark', color='#4682B4')
 
     # Add labels, title, and legend
     ax3.set_xlabel('Metrics', color='white')
@@ -209,7 +239,7 @@ with st.expander("View Performance Metrics"):
     ax3.patch.set_alpha(0.0)
 
     # Set legend background transparency and color to white
-    legend = ax3.legend(loc='upper left', fontsize=12)
+    legend = ax3.legend(loc='best', fontsize=11)
     legend.get_frame().set_alpha(0.0)
     plt.setp(legend.get_texts(), color='white')
     plt.setp(legend.get_title(), color='white')
@@ -241,8 +271,10 @@ with st.expander("View Performance Metrics"):
 
     st.pyplot(fig3)
 
+#####################################################################################
+
 # Calculate Sharpe Ratio for the portfolio and benchmark
-risk_free_rate = 0.01  # Example risk-free rate
+risk_free_rate = 0.02  # Example risk-free rate
 
 sharpe_ratio_portfolio = (annualized_return - risk_free_rate) / annualized_volatility
 sharpe_ratio_benchmark = (annualized_return_BNK - risk_free_rate) / annualized_volatility_BNK
@@ -264,7 +296,6 @@ ratios = ['Sharpe Ratio', 'Sortino Ratio', 'Calmar Ratio']
 portfolio_ratios = [sharpe_ratio_portfolio, sortino_ratio_portfolio, calmar_ratio_portfolio]
 benchmark_ratios = [sharpe_ratio_benchmark, sortino_ratio_benchmark, calmar_ratio_benchmark]
 
-
 with st.expander("View Performance Ratios"):
     fig4, ax4 = plt.subplots(figsize=(8, 6))  # Define ax4
 
@@ -275,8 +306,8 @@ with st.expander("View Performance Ratios"):
     index = np.arange(len(ratios))
 
     # Plot the bars for the portfolio and benchmark without colormap
-    bars1 = ax4.bar(index, portfolio_ratios, bar_width, label='Portfolio', color='orange')
-    bars2 = ax4.bar(index + bar_width, benchmark_ratios, bar_width, label='Benchmark', color='blue')
+    bars1 = ax4.bar(index, portfolio_ratios, bar_width, label='Portfolio', color='#FF6666')
+    bars2 = ax4.bar(index + bar_width, benchmark_ratios, bar_width, label='Benchmark', color='#4682B4')
 
     # Add labels, title, and legend
     ax4.set_xlabel('Ratios', color='white')
@@ -290,7 +321,7 @@ with st.expander("View Performance Ratios"):
     ax4.patch.set_alpha(0.0)
 
     # Set legend background transparency and color to white
-    legend = ax4.legend(loc='upper left', fontsize=12)
+    legend = ax4.legend(loc='best', fontsize=11)
     legend.get_frame().set_alpha(0.0)
     plt.setp(legend.get_texts(), color='white')
     plt.setp(legend.get_title(), color='white')
