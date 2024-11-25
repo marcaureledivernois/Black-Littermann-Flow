@@ -98,10 +98,9 @@ else:
 
 # Main page#############################################################################################################
 # Define the custom color palette
-colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
-colors2 = ['#f2e6d9','#ff4b4b', '#ff7a7a']
+colors = ['#f2e6d9','#ff4b4b','#ff7a7a','#ffb8b8', '#ff9999']
 custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
-custom_cmap2 = LinearSegmentedColormap.from_list("custom_red", colors2)
+
 
 st.title("Black Littermann")
 
@@ -181,7 +180,7 @@ if st.session_state.get('insert_analyst_views', False):
                 }, index=Asset_List)
                 
                 # Plot the data
-                plot_data.plot(kind='bar', ax=ax, color=colors2, edgecolor='none', alpha=0.7)
+                plot_data.plot(kind='bar', ax=ax, color=colors, edgecolor='none', alpha=0.7)
                 
                 # Customize the plot
                 ax.set_xlabel('Tickers', color='white')
@@ -213,7 +212,7 @@ if not st.session_state.get('insert_analyst_views', False):
             fig, ax = plt.subplots()
             
             # Increase the saturation of the colors
-            colors = custom_cmap2(np.linspace(0, 1, len(BlPrior)))
+            colors = custom_cmap(np.linspace(0, 1, len(BlPrior)))
 
             
             # Create a DataFrame to hold the data for plotting
@@ -222,7 +221,7 @@ if not st.session_state.get('insert_analyst_views', False):
             }, index=Asset_List)
             
             # Plot the data
-            plot_data.plot(kind='bar', ax=ax, color=colors[3], edgecolor='none', alpha=0.9)
+            plot_data.plot(kind='bar', ax=ax, color=colors[2], edgecolor='none', alpha=0.9)
             
             # Customize the plot
             ax.set_xlabel('Tickers', color='white')

@@ -21,6 +21,7 @@ def update_asset_list():
     st.session_state['Asset_List'] = st.session_state['temp_Asset_List']
 def update_data_frequency():
     st.session_state['Data_Frequency'] = st.session_state['temp_Data_Frequency']
+    
 if 'Asset_List' not in st.session_state:
     st.session_state['Asset_List'] = []
 if 'temp_Asset_List' not in st.session_state:

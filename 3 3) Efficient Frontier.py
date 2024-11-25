@@ -37,16 +37,6 @@ allow_sector_constraints = st.sidebar.checkbox(
     args=('allow_sector_constraints', not st.session_state.get('allow_sector_constraints', False))
 )
 
-st.sidebar.markdown("<hr style='margin: 0;'>", unsafe_allow_html=True)
-st.sidebar.markdown("<h4 style='text-align: left;'>Objective</h4>", unsafe_allow_html=True)
-
-# Checkbox to allow custom constraints
-custom_constraints = st.sidebar.checkbox(
-    'Custom Objective', 
-    value=st.session_state.get('custom_constraints', False),
-    on_change=update_session_state,
-    args=('custom_constraints', not st.session_state.get('custom_constraints', False))
-)
 #Main Page############################################################################################################
 # Create a sector mapper using the constituents DataFrame
 if allow_sector_constraints:
@@ -92,17 +82,7 @@ if allow_sector_constraints:
 st.title("Objective")
 # Dropdown menu for objective selection
 objective_options = ["Max Sharpe", "Min Volatility", "Max Quadratic Utility", "Max Return"]
-if custom_constraints:
-    objective_options = ["Target Return", "Target Variance"]
-
-if custom_constraints:
-    col1, col2 = st.columns(2)
-    with col1:
-        selected_objective = st.selectbox("Select Objective", objective_options, key="selected_objective")
-    with col2:
-        target_value = st.number_input(f"Input {selected_objective}", min_value=0.0, step=0.05, key="target_value")
-else:
-    selected_objective = st.selectbox("Select Objective", objective_options, key="selected_objective")
+selected_objective = st.selectbox("Select Objective", objective_options, key="selected_objective")
 
 #############################################################################################################
 st.title("Efficient Frontier")
@@ -117,107 +97,106 @@ else:
     ef = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
 
 # Plot efficient frontier within an expandable box
-with st.expander("Show Efficient Frontier"):
-    with plt.style.context('dark_background'):
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Manually plot the efficient frontier
-        mus = np.linspace(-0.01, 0.35, 1000)
-        frontier = []
-        for mu in mus:
-            ef.efficient_return(mu)
-            ret, std, _ = ef.portfolio_performance()
-            frontier.append((std, ret))
-        frontier = np.array(frontier)
-        ax.plot(frontier[:, 0], frontier[:, 1], linestyle='--', color='cyan', label='Efficient Frontier')
-        
-        # Calculate and plot tangency, min vol, max ret and max quadratic utility portfolios
-        if allow_sector_constraints:
-            ef_max_sharpe = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
-            ef_min_vol = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
-            ef_max_ret = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
-            ef_max_quadratic = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+with plt.style.context('dark_background'):
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Manually plot the efficient frontier
+    mus = np.linspace(-0.01, 0.35, 1000)
+    frontier = []
+    for mu in mus:
+        ef.efficient_return(mu)
+        ret, std, _ = ef.portfolio_performance()
+        frontier.append((std, ret))
+    frontier = np.array(frontier)
+    ax.plot(frontier[:, 0], frontier[:, 1], linestyle='--', color='cyan', label='Efficient Frontier')
+    
+    # Calculate and plot tangency, min vol, max ret and max quadratic utility portfolios
+    if allow_sector_constraints:
+        ef_max_sharpe = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_min_vol = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_max_ret = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_max_quadratic = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
 
-            ef_max_sharpe.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
-            ef_min_vol.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
-            ef_max_ret.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
-            ef_max_quadratic.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
-        else:
-            ef_max_sharpe = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
-            ef_min_vol = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
-            ef_max_ret = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
-            ef_max_quadratic = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_max_sharpe.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
+        ef_min_vol.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
+        ef_max_ret.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
+        ef_max_quadratic.add_sector_constraints(sector_mapper, st.session_state['sector_lower'], st.session_state['sector_upper'])
+    else:
+        ef_max_sharpe = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_min_vol = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_max_ret = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
+        ef_max_quadratic = EfficientFrontier(expected_returns=returns, cov_matrix=risk_model_matrix, weight_bounds=weight_bounds)
 
 
-        ef_max_sharpe.max_sharpe()
-        ef_min_vol.min_volatility()
-        ef_max_ret._max_return()
-        ef_max_quadratic.max_quadratic_utility()
-        
-        ret_tangent, std_tangent, _ = ef_max_sharpe.portfolio_performance()
-        ret_min, std_min, _ = ef_min_vol.portfolio_performance()
-        ret_max, std_max, _ = ef_max_ret.portfolio_performance()
-        ret_qua, std_qua, _ = ef_max_quadratic.portfolio_performance()
-        
-        # Plot optimized portfoliosf     '{x:.1f}%'
-        ax.scatter(std_tangent, ret_tangent, marker="*", s=100, c="r", label=f"Max Sharpe ({ret_tangent:.1f}%, {std_tangent:.1f}%)")
-        ax.scatter(std_min, ret_min, marker="*", s=100, c="b", label=f"Min Vol ({ret_min:.1f}%, {std_min:.1f}%)")
-        ax.scatter(std_max, ret_max, marker="*", s=100, c="g", label=f"Max Return ({ret_max:.1f}%, {std_max:.1f}%)")
-        ax.scatter(std_qua, ret_qua, marker="*", s=100, c="y", label=f"Max Quadratic Utility ({ret_qua:.1f}%, {std_qua:.1f}%)")
-        
-        # Generate random portfolios
-        n_samples = 10000
-        w = np.random.dirichlet(np.ones(ef.n_assets), n_samples)
-        rets = w.dot(ef.expected_returns)
-        stds = np.sqrt(np.diag(w @ ef.cov_matrix @ w.T))
-        sharpes = rets / stds
-        scatter = ax.scatter(stds, rets, marker=".", c=sharpes, cmap=custom_cmap, alpha=0.6)
-        
-        # Add color bar for Sharpe ratios
-        cbar = fig.colorbar(scatter, ax=ax, label="Sharpe Ratio", pad=0.01)
-        
-        ax.set_xlabel("Portfolio Risk (Standard Deviation)", color='white')
-        ax.set_ylabel("Portfolio Return", color='white')
-        
-        # Customize the plot
-        ax.tick_params(axis='x', colors='white')
-        ax.tick_params(axis='y', colors='white')
-        
-        # Set the figure background to transparent
-        fig.patch.set_alpha(0)
-        ax.patch.set_alpha(0)
-        
-        # Set legend background to transparent
-        leg = ax.legend(loc='lower right')
-        leg.get_frame().set_alpha(0)
-        
-        # Adjust layout
-        plt.tight_layout()
-        
-        # Format x and y axis labels to show percentage
-        ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}%'))
-        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}%'))
-        
-        # Project a line based on the selected objective
-        if selected_objective == "Max Sharpe":
-            ax.axvline(x=std_tangent, color='r', linestyle='--')
-            ax.axhline(y=ret_tangent, color='r', linestyle='--')
-            ax.scatter(std_tangent, ret_tangent, marker="o", s=100, c="r", label="Real Portfolio")
-        elif selected_objective == "Min Volatility":
-            ax.axvline(x=std_min, color='b', linestyle='--')
-            ax.axhline(y=ret_min, color='b', linestyle='--')
-            ax.scatter(std_min, ret_min, marker="o", s=100, c="b", label="Real Portfolio")
-        elif selected_objective == "Max Return":
-            ax.axvline(x=std_max, color='g', linestyle='--')
-            ax.axhline(y=ret_max, color='g', linestyle='--')
-            ax.scatter(std_max, ret_max, marker="o", s=100, c="g", label="Real Portfolio")
-        elif selected_objective == "Max Quadratic Utility":
-            ax.axvline(x=std_qua, color='y', linestyle='--')
-            ax.axhline(y=ret_qua, color='y', linestyle='--')
-            ax.scatter(std_qua, ret_qua, marker="o", s=100, c="y", label="Real Portfolio")
-        
-                # Display the plot
-        st.pyplot(fig)
+    ef_max_sharpe.max_sharpe()
+    ef_min_vol.min_volatility()
+    ef_max_ret._max_return()
+    ef_max_quadratic.max_quadratic_utility()
+    
+    ret_tangent, std_tangent, _ = ef_max_sharpe.portfolio_performance()
+    ret_min, std_min, _ = ef_min_vol.portfolio_performance()
+    ret_max, std_max, _ = ef_max_ret.portfolio_performance()
+    ret_qua, std_qua, _ = ef_max_quadratic.portfolio_performance()
+    
+    # Plot optimized portfoliosf     '{x:.1f}%'
+    ax.scatter(std_tangent, ret_tangent, marker="*", s=100, c="r", label=f"Max Sharpe ({ret_tangent:.1f}%, {std_tangent:.1f}%)")
+    ax.scatter(std_min, ret_min, marker="*", s=100, c="b", label=f"Min Vol ({ret_min:.1f}%, {std_min:.1f}%)")
+    ax.scatter(std_max, ret_max, marker="*", s=100, c="g", label=f"Max Return ({ret_max:.1f}%, {std_max:.1f}%)")
+    ax.scatter(std_qua, ret_qua, marker="*", s=100, c="y", label=f"Max Quadratic Utility ({ret_qua:.1f}%, {std_qua:.1f}%)")
+    
+    # Generate random portfolios
+    n_samples = 10000
+    w = np.random.dirichlet(np.ones(ef.n_assets), n_samples)
+    rets = w.dot(ef.expected_returns)
+    stds = np.sqrt(np.diag(w @ ef.cov_matrix @ w.T))
+    sharpes = rets / stds
+    scatter = ax.scatter(stds, rets, marker=".", c=sharpes, cmap=custom_cmap, alpha=0.6)
+    
+    # Add color bar for Sharpe ratios
+    cbar = fig.colorbar(scatter, ax=ax, label="Sharpe Ratio", pad=0.01)
+    
+    ax.set_xlabel("Portfolio Risk (Standard Deviation)", color='white')
+    ax.set_ylabel("Portfolio Return", color='white')
+    
+    # Customize the plot
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    
+    # Set the figure background to transparent
+    fig.patch.set_alpha(0)
+    ax.patch.set_alpha(0)
+    
+    # Set legend background to transparent
+    leg = ax.legend(loc='lower right')
+    leg.get_frame().set_alpha(0)
+    
+    # Adjust layout
+    plt.tight_layout()
+    
+    # Format x and y axis labels to show percentage
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}%'))
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}%'))
+    
+    # Project a line based on the selected objective
+    if selected_objective == "Max Sharpe":
+        ax.axvline(x=std_tangent, color='r', linestyle='--')
+        ax.axhline(y=ret_tangent, color='r', linestyle='--')
+        ax.scatter(std_tangent, ret_tangent, marker="o", s=100, c="r", label="Real Portfolio")
+    elif selected_objective == "Min Volatility":
+        ax.axvline(x=std_min, color='b', linestyle='--')
+        ax.axhline(y=ret_min, color='b', linestyle='--')
+        ax.scatter(std_min, ret_min, marker="o", s=100, c="b", label="Real Portfolio")
+    elif selected_objective == "Max Return":
+        ax.axvline(x=std_max, color='g', linestyle='--')
+        ax.axhline(y=ret_max, color='g', linestyle='--')
+        ax.scatter(std_max, ret_max, marker="o", s=100, c="g", label="Real Portfolio")
+    elif selected_objective == "Max Quadratic Utility":
+        ax.axvline(x=std_qua, color='y', linestyle='--')
+        ax.axhline(y=ret_qua, color='y', linestyle='--')
+        ax.scatter(std_qua, ret_qua, marker="o", s=100, c="y", label="Real Portfolio")
+    
+            # Display the plot
+    st.pyplot(fig)
         
 # Propagate the weights of the selected portfolio and store in session state
 if selected_objective == "Max Sharpe":
