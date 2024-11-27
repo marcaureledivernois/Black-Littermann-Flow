@@ -14,35 +14,72 @@ colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
 colors = colors[::-1]
 custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
 
-with st.expander("View Portfolio Allocation"):
-    fig, ax = plt.subplots(figsize=(6, 4))  # Smaller figure size
+if all(weight >= 0 for weight in weights.values()):
+    # If no negative weights, create a pie chart
+    with st.expander("View Portfolio Allocation"):
+        fig, ax = plt.subplots(figsize=(6, 4))  # Smaller figure size
 
-    labels = list(weights.keys())
-    sizes = list(weights.values())
-    cmap = plt.get_cmap(custom_cmap)
-    norm = plt.Normalize(vmin=0, vmax=len(sizes))
+        labels = list(weights.keys())
+        sizes = list(weights.values())
+        cmap = plt.get_cmap(custom_cmap)
+        norm = plt.Normalize(vmin=0, vmax=len(sizes))
 
-    labels_with_pct = [f'{label}: {size*100:.1f}%' for label, size in zip(labels, sizes)]
+        labels_with_pct = [f'{label}: {size*100:.1f}%' for label, size in zip(labels, sizes)]
 
-    wedges, texts = ax.pie(
-        sizes,
-        startangle=140,
-        colors=cmap(norm(np.arange(len(sizes)))),
-        wedgeprops=dict(width=0.3),  # Smaller wedge width
-        textprops={'fontsize': 8}  # Smaller font size
-    )
+        wedges, texts = ax.pie(
+            sizes,
+            startangle=140,
+            colors=cmap(norm(np.arange(len(sizes)))),
+            wedgeprops=dict(width=0.3),  # Smaller wedge width
+            textprops={'fontsize': 8}  # Smaller font size
+        )
 
-    legend = ax.legend(wedges, labels_with_pct, title="Assets:", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
-    plt.setp(legend.get_title(), fontsize=18, color="#f2e6d9")  # Increase the font size of the title
-    plt.setp(legend.get_texts(), color="#f2e6d9")
+        legend = ax.legend(wedges, labels_with_pct, title="Assets:", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+        plt.setp(legend.get_title(), fontsize=18, color="#f2e6d9")  # Increase the font size of the title
+        plt.setp(legend.get_texts(), color="#f2e6d9")
 
-    plt.tight_layout()
+        plt.tight_layout()
 
-    fig.patch.set_alpha(0.0)
-    ax.patch.set_alpha(0.0)
-    legend.get_frame().set_alpha(0.0)
+        fig.patch.set_alpha(0.0)
+        ax.patch.set_alpha(0.0)
+        legend.get_frame().set_alpha(0.0)
 
-    st.pyplot(fig)
+        st.pyplot(fig)
+else:
+    # If there are negative weights, create a bar chart
+    with st.expander("View Portfolio Allocation"):
+        df = pd.DataFrame(list(weights.items()), columns=["Asset", "Weight"])
+        fig, ax = plt.subplots(figsize=(6, 4))  # Smaller figure size
+
+        bars = ax.bar(
+            df["Asset"], df["Weight"], color=colors[:len(df)], edgecolor="white"
+        )
+        ax.set_ylabel("Weight", color="white")
+        ax.set_xlabel("Asset", color="white")
+        ax.set_title("Portfolio Weights", color="white")
+        plt.xticks(rotation=45, fontsize=8, color="white")
+        plt.yticks(fontsize=8, color="white")
+        ax.tick_params(axis="x", colors="white", which="both")
+        ax.tick_params(axis="y", colors="white", which="both")
+
+        for spine in ax.spines.values():
+            spine.set_edgecolor("white")
+
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{int(y * 100)}%"))
+
+        for bar, weight in zip(bars, df["Weight"]):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,  # Center the label horizontally
+                bar.get_height(),  # Position the label above the bar
+                f"{weight * 100:.1f}%",  # Format as percentage without decimals
+                ha="center", va="bottom", fontsize=8, color="white"  # Label styling
+            )
+
+        fig.patch.set_alpha(0.0)
+        ax.patch.set_alpha(0.0)
+        plt.tight_layout()
+
+        st.pyplot(fig)
 
 #####################################################################################
 
@@ -79,7 +116,7 @@ with st.expander("View Portfolio Equity curve"):
 
     # Plot the equity curve
     equity_curve.plot(ax=ax1, label="Portfolio Equity Curve", color='#FF6666')
-    
+
     # Plot max equity point (ensure date format is correctly interpreted on x-axis)
     ax1.scatter(equity_curve.index.get_loc(max_equity_date), max_equity, color='red', marker='o', label="Max Equity")
 
@@ -247,7 +284,7 @@ with st.expander("View Performance Metrics"):
     # Set tick parameters color to white
     ax3.tick_params(axis='y', colors='white')
     ax3.tick_params(axis='x', colors='white')
-    
+
     # Set the frame color to white
     for spine in ax3.spines.values():
         spine.set_edgecolor('white')

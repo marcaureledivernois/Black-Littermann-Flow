@@ -38,7 +38,7 @@ def update_session_state(key, value):
 
 # Checkbox to allow modification of the risk aversion coefficient
 modify_risk_aversion = st.sidebar.checkbox(
-    f'Modify Risk Aversion Coefficient ({Risk_Adversion:.1f})', 
+    f'Modify Risk Aversion Coefficient ({Risk_Adversion:.1f})',
     value=st.session_state.get('modify_risk_aversion', False),
     on_change=update_session_state,
     args=('modify_risk_aversion', not st.session_state.get('modify_risk_aversion', False))
@@ -47,11 +47,11 @@ modify_risk_aversion = st.sidebar.checkbox(
 # Display the risk aversion coefficient with an option to modify it if the checkbox is selected
 if st.session_state.get('modify_risk_aversion', False):
     risk_aversion = st.sidebar.slider(
-        'New Risk Aversion Coefficient', 
-        min_value=0.0, 
-        max_value=10.0, 
-        value=st.session_state.get('risk_aversion', float(Risk_Adversion)), 
-        step=0.1, 
+        'New Risk Aversion Coefficient',
+        min_value=0.0,
+        max_value=10.0,
+        value=st.session_state.get('risk_aversion', float(Risk_Adversion)),
+        step=0.1,
         format="%.2f",
         label_visibility='collapsed'
     )
@@ -62,7 +62,7 @@ else:
 
 # Checkbox to allow insertion of the analyst views
 insert_analyst_views = st.sidebar.checkbox(
-    'Insert Analyst Views', 
+    'Insert Analyst Views',
     value=st.session_state.get('insert_analyst_views', False),
     on_change=update_session_state,
     args=('insert_analyst_views', not st.session_state.get('insert_analyst_views', False))
@@ -71,7 +71,7 @@ insert_analyst_views = st.sidebar.checkbox(
 # Checkbox to allow modification of the tau parameter if analyst views are inserted
 if st.session_state.get('insert_analyst_views', False):
     modify_tau = st.sidebar.checkbox(
-        f'Modify Tau Parameter (0.05)', 
+        f'Modify Tau Parameter (0.05)',
         value=st.session_state.get('modify_tau', False),
         on_change=update_session_state,
         args=('modify_tau', not st.session_state.get('modify_tau', False))
@@ -80,11 +80,11 @@ if st.session_state.get('insert_analyst_views', False):
     # Display the tau parameter with an option to modify it if the checkbox is selected
     if st.session_state.get('modify_tau', False):
         tau = st.sidebar.slider(
-            'New Tau Parameter', 
-            min_value=0.01, 
-            max_value=0.10, 
-            value=st.session_state.get('tau', 0.05), 
-            step=0.01, 
+            'New Tau Parameter',
+            min_value=0.01,
+            max_value=0.10,
+            value=st.session_state.get('tau', 0.05),
+            step=0.01,
             format="%.2f",
             label_visibility='collapsed'
         )
@@ -98,9 +98,10 @@ else:
 
 # Main page#############################################################################################################
 # Define the custom color palette
-colors = ['#f2e6d9','#ff4b4b','#ff7a7a','#ffb8b8', '#ff9999']
+colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
+colors2 = ['#f2e6d9','#ff4b4b', '#ff7a7a']
 custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
-
+custom_cmap2 = LinearSegmentedColormap.from_list("custom_red", colors2)
 
 st.title("Black Littermann")
 
@@ -162,42 +163,42 @@ if st.session_state.get('insert_analyst_views', False):
             risk_aversion=risk_aversion
             )
             Blposterior = bl.bl_returns()
-            
+
         # Plot the implied prior returns as percentages within an expandable box
         # with st.expander("Show Expected Posterior Returns"):
             with plt.style.context('dark_background'):
                 fig, ax = plt.subplots()
-                
+
                 # Increase the saturation of the colors
                 # colors = plt.cm.magma(range(len(BlPrior)))
                 # saturated_colors = [plt.cm.magma(i / len(colors) * 0.8 + 0.2) for i in range(len(colors))]
-                
+
                 # Create a DataFrame to hold the data for plotting
                 plot_data = pd.DataFrame({
                     'Prior': BlPrior,
                     'Posterior': Blposterior if st.session_state.get('insert_analyst_views', False) else np.nan,
                     'Analyst Views': st.session_state['views'] if st.session_state.get('insert_analyst_views', False) else np.nan
                 }, index=Asset_List)
-                
+
                 # Plot the data
-                plot_data.plot(kind='bar', ax=ax, color=colors, edgecolor='none', alpha=0.7)
-                
+                plot_data.plot(kind='bar', ax=ax, color=colors2, edgecolor='none', alpha=0.7)
+
                 # Customize the plot
                 ax.set_xlabel('Tickers', color='white')
                 ax.set_ylabel('Expected Return (%)', color='white')  # Update label to show percentage
                 ax.set_title('Expected Implied Returns (%)', color='white')
-                
+
                 # Set tick parameters with white color
                 ax.tick_params(axis='x', colors='white')
                 ax.tick_params(axis='y', colors='white')
-                
+
                 # Format the y-axis to show percentage sign
                 ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}%'))
-                
+
                 # Set the figure background to transparent
                 fig.patch.set_alpha(0)
                 ax.patch.set_alpha(0)
-                
+
                 # Add legend with transparent background
                 legend = ax.legend()
                 legend.get_frame().set_alpha(0)
@@ -210,35 +211,35 @@ if not st.session_state.get('insert_analyst_views', False):
     # with st.expander("Show Expected Implied Returns Plot"):
         with plt.style.context('dark_background'):
             fig, ax = plt.subplots()
-            
-            # Increase the saturation of the colors
-            colors = custom_cmap(np.linspace(0, 1, len(BlPrior)))
 
-            
+            # Increase the saturation of the colors
+            colors = custom_cmap2(np.linspace(0, 1, len(BlPrior)))
+
+
             # Create a DataFrame to hold the data for plotting
             plot_data = pd.DataFrame({
                 'Prior': BlPrior,
             }, index=Asset_List)
-            
+
             # Plot the data
-            plot_data.plot(kind='bar', ax=ax, color=colors[2], edgecolor='none', alpha=0.9)
-            
+            plot_data.plot(kind='bar', ax=ax, color=colors[3], edgecolor='none', alpha=0.9)
+
             # Customize the plot
             ax.set_xlabel('Tickers', color='white')
             ax.set_ylabel('Expected Return (%)', color='white')  # Update label to show percentage
             ax.set_title('Expected Implied Returns (%)', color='white')
-            
+
             # Set tick parameters with white color
             ax.tick_params(axis='x', colors='white')
             ax.tick_params(axis='y', colors='white')
-            
+
             # Format the y-axis to show percentage sign
             ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0f}%'))
-            
+
             # Set the figure background to transparent
             fig.patch.set_alpha(0)
             ax.patch.set_alpha(0)
-            
+
             # Remove legend
             ax.get_legend().remove()
 
@@ -261,22 +262,50 @@ st.session_state['risk_model_matrix'] = risk_model_matrix
 # Plot the risk model matrix
 with plt.style.context('dark_background'):
     fig, ax = plt.subplots()
-    
+
     sns.heatmap(risk_model_matrix, annot=True, fmt=".2f", cmap=custom_cmap, ax=ax)
-    
+
     # Set labels and title with white color
     ax.set_xlabel('Assets', color='white')
     ax.set_ylabel('Assets', color='white')
     ax.title.set_color('white')
-    
+
     # Set tick parameters with white color
     ax.tick_params(axis='x', colors='white')
     ax.tick_params(axis='y', colors='white')
-    
+
     # Set the figure background to transparent
     fig.patch.set_alpha(0)
     ax.patch.set_alpha(0)
-    
+
 # Collapse the graph to show only when expanded
 with st.expander("Risk Model Covariance Matrix Heatmap"):
     st.pyplot(fig)
+
+#########################################################################
+# Calculate the correlation matrix
+correlation_matrix = Analysis_df.drop(columns=['Benchmark','Date']).corr()
+
+# Plot the correlation matrix
+with plt.style.context('dark_background'):
+    fig, ax = plt.subplots()
+
+    sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap=custom_cmap, ax=ax)
+    # Set labels and title with white color
+    ax.set_xlabel('Assets', color='white')
+    ax.set_ylabel('Assets', color='white')
+    ax.title.set_color('white')
+
+    # Set tick parameters with white color
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+
+    # Set the figure background to transparent
+    fig.patch.set_alpha(0)
+    ax.patch.set_alpha(0)
+
+
+    # Collapse the graph to show only when expanded
+with st.expander("Correlation Matrix"):
+    st.pyplot(fig)
+
