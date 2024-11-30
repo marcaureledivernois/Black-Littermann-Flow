@@ -193,7 +193,7 @@ if st.session_state.get('insert_analyst_views', False):
                 ax.tick_params(axis='y', colors='white')
 
                 # Format the y-axis to show percentage sign
-                ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}%'))
+                ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x :.1f}%'))
 
                 # Set the figure background to transparent
                 fig.patch.set_alpha(0)

@@ -6,8 +6,10 @@ from matplotlib.colors import LinearSegmentedColormap
 
 weights = st.session_state['portfolio_weights']
 weights = dict(sorted(weights.items(), key=lambda item: item[1], reverse=True))
+Selected_Objective = st.session_state['selected_objective_final']
 
 #####################################################################################à
+
 # Set Streamlit page title
 st.title("Optimized Portfolio")
 colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
@@ -16,7 +18,7 @@ custom_cmap = LinearSegmentedColormap.from_list("custom_red", colors)
 
 if all(weight >= 0 for weight in weights.values()):
     # If no negative weights, create a pie chart
-    with st.expander("View Portfolio Allocation"):
+    with st.expander(f"View Portfolio Allocation for {Selected_Objective}"):
         fig, ax = plt.subplots(figsize=(6, 4))  # Smaller figure size
 
         labels = list(weights.keys())

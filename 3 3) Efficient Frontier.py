@@ -80,10 +80,15 @@ if allow_sector_constraints:
         sector_upper = st.session_state['sector_upper']
 #############################################################################################################
 st.title("Objective")
+
+if 'selected_objective' not in st.session_state:
+    st.session_state['selected_objective'] = 'Max Sharpe'
+
 # Dropdown menu for objective selection
 objective_options = ["Max Sharpe", "Min Volatility", "Max Quadratic Utility", "Max Return"]
-selected_objective = st.selectbox("Select Objective", objective_options, key="selected_objective")
+selected_objective = st.selectbox("Select Objective", objective_options,key="selected_objective")
 
+st.session_state['selected_objective_final'] = selected_objective
 #############################################################################################################
 st.title("Efficient Frontier")
 colors = ['#f2e6d9','#ffb8b8','#ff9999', '#ff7a7a', '#ff4b4b']
@@ -194,9 +199,7 @@ with plt.style.context('dark_background'):
         ax.axvline(x=std_qua, color='y', linestyle='--')
         ax.axhline(y=ret_qua, color='y', linestyle='--')
         ax.scatter(std_qua, ret_qua, marker="o", s=100, c="y", label="Real Portfolio")
-    
-            # Display the plot
-    st.pyplot(fig)
+st.pyplot(fig)
         
 # Propagate the weights of the selected portfolio and store in session state
 if selected_objective == "Max Sharpe":
