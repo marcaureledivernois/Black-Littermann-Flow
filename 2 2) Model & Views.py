@@ -222,7 +222,7 @@ if not st.session_state.get('insert_analyst_views', False):
             }, index=Asset_List)
 
             # Plot the data
-            plot_data.plot(kind='bar', ax=ax, color=colors[3], edgecolor='none', alpha=0.9)
+            plot_data.plot(kind='bar', ax=ax, color=colors[2], edgecolor='none', alpha=0.9)
 
             # Customize the plot
             ax.set_xlabel('Tickers', color='white')
